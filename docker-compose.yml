@@ -14,6 +14,9 @@ services:
       MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: "health,info,prometheus,metrics"
       MANAGEMENT_ENDPOINT_PROMETHEUS_ENABLED: "true"
       MANAGEMENT_METRICS_EXPORT_PROMETHEUS_ENABLED: "true"
+      MANAGEMENT_TRACING_SAMPLING_PROBABILITY: "1.0"
+      MANAGEMENT_OTLP_TRACING_ENDPOINT: "http://tempo:4318/v1/traces"
+      SPRING_APPLICATION_NAME: "hapi-fhir"
     ports:
       - "9090:8080"
     depends_on:
@@ -24,7 +27,7 @@ services:
 
   hapi-fhir-postgres:
     image: postgres:16-alpine
-    container_name: hapi-fhir-postgres
+    container_name: hapi-fhir-postglkjres
     restart: always
     networks:
       - monitoring
@@ -103,13 +106,28 @@ services:
       - '--storage.tsdb.retention.time=7d'    # Garde 7 jours de données
     depends_on:
       - hapi-fhir-jpaserver-start
+  tempo:
+    image: grafana/tempo:2.3.0
+    container_name: tempo
+    restart: unless-stopped
+    networks:
+      - monitoring
+    ports:
+      - "3200:3200"    # Interface Tempo
+      - "4317:4317"    # OTLP gRPC (reçoit les traces)
+      - "4318:4318"    # OTLP HTTP
+    volumes:
+      - ./config/tempo-config.yml:/etc/tempo.yml
+      - tempo-data:/tmp/tempo
+    command: -config.file=/etc/tempo.yml
 
 volumes:
   hapi-fhir-postgres:
   loki-data:
   grafana-data:
   prometheus-data:
-
+  tempo-data:
 networks:
   monitoring:
     driver: bridge
+
