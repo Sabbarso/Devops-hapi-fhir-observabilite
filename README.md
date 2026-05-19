@@ -8,7 +8,7 @@
 
 > \*\*Stack\*\* : HAPI FHIR · Prometheus · Grafana · Loki · Tempo · k6  
 
-> \*\*Soutenance\*\* : 5 Mars 2026
+
 
 
 
